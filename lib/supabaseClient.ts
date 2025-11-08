@@ -46,6 +46,13 @@ export interface Profile {
   longitude: number | null;
   last_seen: string | null;
   created_at: string;
+  // Social media links
+  linkedin?: string | null;
+  instagram?: string | null;
+  twitter?: string | null;
+  github?: string | null;
+  email?: string | null;
+  phone?: string | null;
 }
 
 export interface Connection {
@@ -208,8 +215,32 @@ export async function updateProfile(
 ) {
   // Check if Supabase is configured
   if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-    console.log('📝 Demo mode: Profile update skipped (Supabase not configured)');
-    // Return a mock updated profile
+    console.log('📝 Demo mode: Updating profile in local storage');
+
+    try {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const storedProfiles = await AsyncStorage.getItem('demo_profiles');
+
+      if (storedProfiles) {
+        const profiles = JSON.parse(storedProfiles);
+        const profileIndex = profiles.findIndex((p: Profile) => p.id === profileId);
+
+        if (profileIndex !== -1) {
+          // Update the profile
+          profiles[profileIndex] = {
+            ...profiles[profileIndex],
+            ...updates,
+          };
+          await AsyncStorage.setItem('demo_profiles', JSON.stringify(profiles));
+          console.log('📝 Demo mode: Profile updated in local storage');
+          return profiles[profileIndex] as Profile;
+        }
+      }
+    } catch (error) {
+      console.error('Error updating profile in demo mode:', error);
+    }
+
+    // Return a mock updated profile if update failed
     return {
       id: profileId,
       name: null,

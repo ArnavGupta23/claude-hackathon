@@ -99,32 +99,57 @@ export async function readTag(onRead: (id: string) => void): Promise<void> {
   // Simulate NFC read in Expo Go or if NFC Manager is not available
   if (isExpoGo || !NfcManager) {
     console.log('📱 Simulated NFC tap - reading profile ID');
-    
-    // In demo mode, try to get a real profile ID from storage
+
+    // In demo mode, simulate scanning a virtual NFC tag
+    // This creates a temporary "other user" profile for testing
     try {
       const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+
+      // Create a simulated "scanned" user profile
+      const scannedUserId = `demo-scanned-${Date.now()}`;
+      const scannedUserProfile = {
+        id: scannedUserId,
+        name: 'Demo User',
+        major: 'Computer Science',
+        interests: ['Technology', 'Music', 'Sports'],
+        bio: 'This is a simulated NFC scanned profile for testing',
+        nfc_tag: null,
+        latitude: null,
+        longitude: null,
+        last_seen: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
+
+      // Store this profile in demo_profiles so it can be found later
       const storedProfiles = await AsyncStorage.getItem('demo_profiles');
-      if (storedProfiles) {
-        const profiles = JSON.parse(storedProfiles);
-        if (profiles.length > 0) {
-          // Use a random profile or the first one as simulated NFC read
-          const randomProfile = profiles[Math.floor(Math.random() * profiles.length)];
-          console.log('📱 Simulated NFC: Reading profile', randomProfile.id);
-          setTimeout(() => {
-            onRead(randomProfile.id);
-          }, 2000);
-          return Promise.resolve();
-        }
+      const profiles = storedProfiles ? JSON.parse(storedProfiles) : [];
+
+      // Check if this simulated user already exists (to avoid duplicates in same session)
+      const existingSimulated = profiles.find((p: any) => p.name === 'Demo User' && p.major === 'Computer Science');
+      const profileToUse = existingSimulated || scannedUserProfile;
+
+      if (!existingSimulated) {
+        profiles.push(scannedUserProfile);
+        await AsyncStorage.setItem('demo_profiles', JSON.stringify(profiles));
+        console.log('📱 Created simulated scanned user profile:', scannedUserId);
+      } else {
+        console.log('📱 Using existing simulated user profile:', existingSimulated.id);
       }
+
+      // Simulate NFC read delay
+      setTimeout(() => {
+        console.log('📱 Simulated NFC: Reading profile', profileToUse.id);
+        onRead(profileToUse.id);
+      }, 2000);
+      return Promise.resolve();
     } catch (error) {
-      console.log('Error getting demo profiles:', error);
+      console.log('Error in simulated NFC read:', error);
+      // Fallback: use a simple demo ID
+      setTimeout(() => {
+        onRead('demo-nfc-connection');
+      }, 2000);
+      return Promise.resolve();
     }
-    
-    // Fallback: use a demo ID
-    setTimeout(() => {
-      onRead('demo-nfc-connection');
-    }, 2000);
-    return Promise.resolve();
   }
 
   try {

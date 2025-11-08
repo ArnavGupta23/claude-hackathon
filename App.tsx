@@ -109,6 +109,50 @@ export default function App() {
     startProximityDetection(newProfileId);
   };
 
+  /**
+   * Handle sign out
+   * Clears all user data and returns to onboarding
+   */
+  const handleSignOut = async () => {
+    try {
+      // Stop proximity detection
+      stopProximityDetection();
+
+      // Clear all AsyncStorage keys
+      const keys = [
+        'userProfileId',
+        'device_id',
+        'demo_profiles',
+        'demo_connections',
+        'nfc_connection_log',
+      ];
+
+      // Clear user-specific location data if profileId exists
+      if (profileId) {
+        keys.push(`user_location_${profileId}`);
+        keys.push(`proximity_last_checked_${profileId}`);
+      }
+
+      // Remove all keys
+      await AsyncStorage.multiRemove(keys);
+
+      // Also clear any notification-related keys (notified_*)
+      const allKeys = await AsyncStorage.getAllKeys();
+      const notificationKeys = allKeys.filter(key => key.startsWith('notified_'));
+      if (notificationKeys.length > 0) {
+        await AsyncStorage.multiRemove(notificationKeys);
+      }
+
+      // Reset app state
+      setProfileId(null);
+      setHasProfile(false);
+
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   // Show loading screen while initializing
   if (isLoading) {
     return (
@@ -160,6 +204,7 @@ export default function App() {
                       userId: profileId!,
                     })
                   }
+                  onSignOut={handleSignOut}
                 />
               )}
             </Stack.Screen>

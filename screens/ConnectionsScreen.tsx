@@ -13,6 +13,7 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  TextInput,
 } from 'react-native';
 import { ConnectionItem } from '../components/ConnectionItem';
 import { getUserConnections, Profile } from '../lib/supabaseClient';
@@ -33,8 +34,10 @@ export const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
   userId,
 }) => {
   const [connections, setConnections] = useState<ConnectionWithProfile[]>([]);
+  const [filteredConnections, setFilteredConnections] = useState<ConnectionWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   /**
    * Load user connections from Supabase
@@ -43,6 +46,7 @@ export const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
     try {
       const data = await getUserConnections(userId);
       setConnections(data);
+      setFilteredConnections(data);
     } catch (error) {
       console.error('Error loading connections:', error);
       Alert.alert('Error', 'Failed to load connections');
@@ -51,6 +55,33 @@ export const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
       setRefreshing(false);
     }
   };
+
+  /**
+   * Filter connections based on search query
+   */
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredConnections(connections);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = connections.filter((conn) => {
+      const profile = conn.profile;
+      if (!profile) return false;
+
+      return (
+        profile.name?.toLowerCase().includes(query) ||
+        profile.major?.toLowerCase().includes(query) ||
+        profile.interests?.some((interest) =>
+          interest.toLowerCase().includes(query)
+        ) ||
+        profile.bio?.toLowerCase().includes(query)
+      );
+    });
+
+    setFilteredConnections(filtered);
+  }, [searchQuery, connections]);
 
   useEffect(() => {
     loadConnections();
@@ -92,11 +123,38 @@ export const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
       <View style={styles.header}>
         <Text style={styles.title}>My Connections</Text>
         <Text style={styles.subtitle}>
-          {connections.length} {connections.length === 1 ? 'connection' : 'connections'}
+          {filteredConnections.length} of {connections.length} {connections.length === 1 ? 'connection' : 'connections'}
         </Text>
       </View>
 
-      {connections.length === 0 ? (
+      {connections.length > 0 && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name, major, or interests..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholderTextColor="#999"
+          />
+          {searchQuery.length > 0 && (
+            <Text
+              style={styles.clearButton}
+              onPress={() => setSearchQuery('')}
+            >
+              ✕
+            </Text>
+          )}
+        </View>
+      )}
+
+      {filteredConnections.length === 0 && searchQuery.length > 0 ? (
+        <View style={styles.centerContent}>
+          <Text style={styles.emptyText}>No connections match your search</Text>
+          <Text style={styles.emptySubtext}>Try a different search term</Text>
+        </View>
+      ) : connections.length === 0 ? (
         <View style={styles.centerContent}>
           <Text style={styles.emptyText}>No connections yet</Text>
           <Text style={styles.emptySubtext}>
@@ -105,7 +163,7 @@ export const ConnectionsScreen: React.FC<ConnectionsScreenProps> = ({
         </View>
       ) : (
         <FlatList
-          data={connections}
+          data={filteredConnections}
           renderItem={renderConnection}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
@@ -164,6 +222,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
+  },
+  searchContainer: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  clearButton: {
+    fontSize: 20,
+    color: '#999',
+    paddingLeft: 12,
   },
 });
 

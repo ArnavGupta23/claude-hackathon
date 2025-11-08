@@ -18,10 +18,14 @@ import { Button } from 'react-native-paper';
 import { ProfileCard } from '../components/ProfileCard';
 import { NFCButton } from '../components/NFCButton';
 import { QRCodeDisplay } from '../components/QRCodeDisplay';
+import { InterestManager } from '../components/InterestManager';
+import { SocialLinks, SocialLinksData } from '../components/SocialLinks';
+import { ProfileStats } from '../components/ProfileStats';
 import {
   getProfileById,
   updateProfile,
   Profile,
+  getUserConnections,
 } from '../lib/supabaseClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -30,6 +34,7 @@ interface ProfileScreenProps {
   onNavigateToScan: () => void;
   onNavigateToQRScan: () => void;
   onNavigateToConnections: () => void;
+  onSignOut: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -37,10 +42,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNavigateToScan,
   onNavigateToQRScan,
   onNavigateToConnections,
+  onSignOut,
 }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isEditingInterests, setIsEditingInterests] = useState(false);
+  const [editedInterests, setEditedInterests] = useState<string[]>([]);
+  const [connectionCount, setConnectionCount] = useState(0);
 
   /**
    * Load user profile from Supabase
@@ -76,6 +85,16 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       }
       
       setProfile(data);
+
+      // Load connection count
+      if (data) {
+        try {
+          const connections = await getUserConnections(data.id);
+          setConnectionCount(connections.length);
+        } catch (connError) {
+          console.error('Error loading connections:', connError);
+        }
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       Alert.alert('Error', 'Failed to load profile');
@@ -95,6 +114,76 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     loadProfile();
+  };
+
+  /**
+   * Handle sign out with confirmation
+   */
+  const handleSignOutPress = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out? This will clear all your local data.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: onSignOut,
+        },
+      ]
+    );
+  };
+
+  /**
+   * Start editing interests
+   */
+  const handleStartEditInterests = () => {
+    setEditedInterests(profile?.interests || []);
+    setIsEditingInterests(true);
+  };
+
+  /**
+   * Save updated interests to profile
+   */
+  const handleSaveInterests = async () => {
+    if (!profile) return;
+
+    try {
+      await updateProfile(profile.id, { interests: editedInterests } as any);
+      setProfile({ ...profile, interests: editedInterests });
+      setIsEditingInterests(false);
+      Alert.alert('Success', 'Your interests have been updated!');
+    } catch (error) {
+      console.error('Error updating interests:', error);
+      Alert.alert('Error', 'Failed to update interests. Please try again.');
+    }
+  };
+
+  /**
+   * Cancel editing interests
+   */
+  const handleCancelEditInterests = () => {
+    setEditedInterests([]);
+    setIsEditingInterests(false);
+  };
+
+  /**
+   * Save social media links
+   */
+  const handleSaveSocialLinks = async (links: SocialLinksData) => {
+    if (!profile) return;
+
+    try {
+      await updateProfile(profile.id, links as any);
+      setProfile({ ...profile, ...links });
+      Alert.alert('Success', 'Your social links have been updated!');
+    } catch (error) {
+      console.error('Error updating social links:', error);
+      Alert.alert('Error', 'Failed to update social links. Please try again.');
+    }
   };
 
   if (loading) {
@@ -154,6 +243,76 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         <ProfileCard profile={profile} editable={false} />
 
+        {/* Profile Statistics */}
+        <View style={styles.statsSection}>
+          <ProfileStats
+            connectionCount={connectionCount}
+            dateJoined={profile.created_at}
+            lastActive={profile.last_seen}
+          />
+        </View>
+
+        {/* Social Links Section */}
+        <View style={styles.socialSection}>
+          <SocialLinks
+            linkedin={profile.linkedin}
+            instagram={profile.instagram}
+            twitter={profile.twitter}
+            github={profile.github}
+            email={profile.email}
+            phone={profile.phone}
+            editable={true}
+            onSave={handleSaveSocialLinks}
+          />
+        </View>
+
+        {/* Interest Management Section */}
+        <View style={styles.interestsSection}>
+          <View style={styles.interestsSectionHeader}>
+            <Text style={styles.interestsSectionTitle}>
+              {isEditingInterests ? 'Edit Interests' : 'Your Interests'}
+            </Text>
+            {!isEditingInterests && (
+              <Button
+                mode="text"
+                onPress={handleStartEditInterests}
+                textColor="#4DB6AC"
+                compact
+              >
+                Edit
+              </Button>
+            )}
+          </View>
+
+          <InterestManager
+            interests={isEditingInterests ? editedInterests : profile.interests || []}
+            onInterestsChange={setEditedInterests}
+            editable={isEditingInterests}
+          />
+
+          {isEditingInterests && (
+            <View style={styles.editButtons}>
+              <Button
+                mode="outlined"
+                onPress={handleCancelEditInterests}
+                style={styles.editButton}
+                textColor="#666"
+              >
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSaveInterests}
+                style={styles.editButton}
+                buttonColor="#4DB6AC"
+                textColor="#FFFFFF"
+              >
+                Save
+              </Button>
+            </View>
+          )}
+        </View>
+
         <View style={styles.qrSection}>
           <Text style={styles.qrSectionTitle}>Share Your Profile</Text>
           <QRCodeDisplay profileId={profile.id} size={180} />
@@ -194,6 +353,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             textColor="#1A237E"
           >
             👥 My Connections
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={handleSignOutPress}
+            style={[styles.button, styles.signOutButton]}
+            textColor="#D32F2F"
+          >
+            Sign Out
           </Button>
         </View>
       </ScrollView>
@@ -277,6 +445,58 @@ const styles = StyleSheet.create({
   retryButton: {
     marginTop: 12,
     minWidth: 200,
+  },
+  signOutButton: {
+    marginTop: 16,
+    borderColor: '#D32F2F',
+  },
+  interestsSection: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    marginTop: 0,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  interestsSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  interestsSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A237E',
+  },
+  editButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 16,
+  },
+  editButton: {
+    minWidth: 80,
+  },
+  statsSection: {
+    margin: 16,
+    marginTop: 0,
+  },
+  socialSection: {
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    marginTop: 0,
+    padding: 16,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
 });
 
