@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "LinkUp",
+    "slug": "linkup",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "_comment": "Icon file is optional for development",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A237E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.linkup.app",
+      "infoPlist": {
+        "NFCReaderUsageDescription": "LinkUp uses NFC to exchange profiles with other students.",
+        "NSLocationWhenInUseUsageDescription": "LinkUp uses your location to find nearby students with matching interests.",
+        "NSLocationAlwaysUsageDescription": "LinkUp uses your location to find nearby students with matching interests.",
+        "NSCameraUsageDescription": "LinkUp uses your camera to scan QR codes for profile sharing."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A237E"
+      },
+      "package": "com.linkup.app",
+      "permissions": [
+        "android.permission.NFC",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Allow LinkUp to use NFC to exchange profiles."
+        }
+      ]
+    ]
+  }
+}
+
