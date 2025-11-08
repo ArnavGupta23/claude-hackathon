@@ -75,11 +75,7 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    if (demoMode) {
-      navigate('/dashboard', { replace: true });
-      return;
-    }
-    if (user && user.emailVerified && profile) {
+    if (!demoMode && user && user.emailVerified && profile) {
       navigate('/dashboard', { replace: true });
     }
   }, [demoMode, navigate, profile, user]);
@@ -206,11 +202,11 @@ const LoginPage = () => {
     setFeedback({ status: 'idle', message: '' });
   };
 
-  const renderCard = () => {
-    if (demoMode) {
-      return <LoadingCard />;
-    }
+  const handleOpenDemoDashboard = () => {
+    navigate('/dashboard');
+  };
 
+  const renderCard = () => {
     const shouldShowLoader = checkingSession || (user?.emailVerified ? profileLoading : false);
 
     if (shouldShowLoader) {
@@ -249,6 +245,20 @@ const LoginPage = () => {
   return (
     <div className="app-shell">
       <HeroPanel />
+
+      {demoMode && (
+        <div className="card">
+          <p className="eyebrow">Demo mode enabled</p>
+          <h2>Jump straight into the Local Repair Matchmaker dashboard.</h2>
+          <p className="muted">
+            We seeded Firestore-style data locally so you can demo seeker and fixer flows without
+            creating accounts. Use the auth form below only if you want to show the login UX.
+          </p>
+          <button type="button" className="primary" onClick={handleOpenDemoDashboard}>
+            Open demo dashboard
+          </button>
+        </div>
+      )}
 
       {renderCard()}
 

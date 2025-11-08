@@ -58,6 +58,10 @@ const DashboardPage = () => {
   }, [checkingSession, demoMode, navigate, user]);
 
   const handleSignOut = async () => {
+    if (demoMode) {
+      navigate('/', { replace: true });
+      return;
+    }
     try {
       await signOut(auth);
       navigate('/', { replace: true });
@@ -74,7 +78,7 @@ const DashboardPage = () => {
           profile={demoProfile}
           roleUpdating={false}
           onRoleChange={handleDemoRoleChange}
-          onSignOut={async () => {}}
+          onSignOut={handleSignOut}
           prefilledData={memoizedPrefill}
           demoEstimate={demoEstimate}
         />
