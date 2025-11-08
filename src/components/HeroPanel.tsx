@@ -1,19 +1,19 @@
 const HeroPanel = () => (
   <div className="hero">
-    <p className="badge">Hackathon ready</p>
+    <p className="badge">Local Repair Matchmaker</p>
     <h1>
-      Modern auth,
+      Neighbors post fixes,
       <br />
-      shipped in minutes.
+      makers jump in fast.
     </h1>
     <p className="muted">
-      Production-ready authentication powered by Firebase. Email magic, Google sign-in, and spotless
-      UX so judges focus on your idea, not your login screen.
+      Pair residents who need help with community fixers. Firebase keeps identities and requests
+      organized while GPT drafts cost and repair guidance in seconds.
     </p>
     <ul className="hero-list">
-      <li>One-click Google onboarding</li>
-      <li>Secure email verification flow baked in</li>
-      <li>Responsive, accessible design system</li>
+      <li>Dual login for seekers and fixers</li>
+      <li>Firestore-backed repair requests</li>
+      <li>Auto-generated GPT repair estimates</li>
     </ul>
     <div className="hero-gradient" />
   </div>

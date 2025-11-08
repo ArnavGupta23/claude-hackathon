@@ -1,30 +1,30 @@
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import type { User } from 'firebase/auth';
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import HeroPanel from '../components/HeroPanel';
 import AuthFormCard from '../components/cards/AuthFormCard';
-import AuthenticatedCard from '../components/cards/AuthenticatedCard';
 import LoadingCard from '../components/cards/LoadingCard';
 import VerifyEmailCard from '../components/cards/VerifyEmailCard';
 import type { AuthMode, FeedbackState, FormState } from '../types/auth';
 import { formatAuthError } from '../utils/formatAuthError';
+import { useAuth } from '../context/AuthContext';
 import '../App.css';
 
 const initialFormState: FormState = {
   name: '',
   email: '',
   password: '',
+  role: 'seeker',
 };
 
 const provider = new GoogleAuthProvider();
@@ -35,25 +35,10 @@ const LoginPage = () => {
   const [form, setForm] = useState<FormState>(initialFormState);
   const [feedback, setFeedback] = useState<FeedbackState>({ status: 'idle', message: '' });
   const [busy, setBusy] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
   const [resendTimer, setResendTimer] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          await firebaseUser.reload();
-        } catch (error) {
-          console.warn('Unable to refresh user', error);
-        }
-      }
-      setUser(firebaseUser);
-      setCheckingSession(false);
-    });
-
-    return unsubscribe;
-  }, []);
+  const navigate = useNavigate();
+  const { user, profile, checkingSession, profileLoading, ensureProfile, refreshUser } = useAuth();
+  const demoMode = import.meta.env.VITE_USE_DUMMY_DATA === 'true';
 
   useEffect(() => {
     if (resendTimer === 0) {
@@ -89,6 +74,16 @@ const LoginPage = () => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  useEffect(() => {
+    if (demoMode) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+    if (user && user.emailVerified && profile) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [demoMode, navigate, profile, user]);
+
   const handleEmailAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) {
@@ -107,6 +102,7 @@ const LoginPage = () => {
         if (form.name.trim()) {
           await updateProfile(credential.user, { displayName: form.name.trim() });
         }
+        await ensureProfile(credential.user, { role: form.role, fullName: form.name.trim() });
         await sendEmailVerification(credential.user);
         setFeedback({
           status: 'success',
@@ -115,6 +111,7 @@ const LoginPage = () => {
         setForm((prev) => ({ ...prev, password: '' }));
       } else {
         const credential = await signInWithEmailAndPassword(auth, email, password);
+        await ensureProfile(credential.user);
         if (!credential.user.emailVerified) {
           await sendEmailVerification(credential.user);
           setFeedback({
@@ -137,7 +134,8 @@ const LoginPage = () => {
     setBusy(true);
     setFeedback({ status: 'idle', message: '' });
     try {
-      await signInWithPopup(auth, provider);
+      const credential = await signInWithPopup(auth, provider);
+      await ensureProfile(credential.user);
       setFeedback({ status: 'success', message: 'Signed in with Google successfully.' });
     } catch (error) {
       console.error(error);
@@ -173,8 +171,7 @@ const LoginPage = () => {
     }
     setBusy(true);
     try {
-      await auth.currentUser.reload();
-      setUser(auth.currentUser);
+      await refreshUser();
       setFeedback({
         status: 'success',
         message: auth.currentUser.emailVerified
@@ -210,12 +207,14 @@ const LoginPage = () => {
   };
 
   const renderCard = () => {
-    if (checkingSession) {
+    if (demoMode) {
       return <LoadingCard />;
     }
 
-    if (user && user.emailVerified) {
-      return <AuthenticatedCard user={user} busy={busy} onSignOut={handleSignOut} />;
+    const shouldShowLoader = checkingSession || (user?.emailVerified ? profileLoading : false);
+
+    if (shouldShowLoader) {
+      return <LoadingCard />;
     }
 
     if (user && !user.emailVerified) {

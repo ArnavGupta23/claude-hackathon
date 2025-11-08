@@ -182,6 +182,21 @@ h1 {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
+.field select {
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.95rem 1.1rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.field select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.8);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
 .field small {
   color: var(--muted);
 }
@@ -269,6 +284,56 @@ button:disabled {
   height: 1.2rem;
 }
 
+.role-fieldset {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.role-fieldset legend {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.role-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.role-option {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.9rem;
+  display: flex;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+}
+
+.role-option input {
+  accent-color: var(--accent);
+}
+
+.role-option.active {
+  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.role-option strong {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.role-option p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .card.loading {
   align-items: center;
   text-align: center;
@@ -287,6 +352,136 @@ button:disabled {
   to {
     transform: rotate(360deg);
   }
+}
+
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.role-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.role-chip {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  padding: 0.6rem 1.2rem;
+}
+
+.role-chip.active {
+  border-color: rgba(99, 102, 241, 0.8);
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.job-card {
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  padding: 1.2rem;
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.job-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.status-pill {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.urgency-low {
+  border-color: rgba(52, 211, 153, 0.6);
+  color: var(--success);
+}
+
+.urgency-medium {
+  border-color: rgba(251, 191, 36, 0.6);
+  color: #fbbf24;
+}
+
+.urgency-high {
+  border-color: rgba(248, 113, 113, 0.6);
+  color: var(--error);
+}
+
+.job-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.job-meta dt {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.job-meta dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+
+.estimate-summary {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.estimate-summary ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+.owner-line {
+  font-size: 0.9rem;
+}
+
+.job-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ai-preview ul {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+.estimate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.estimate-grid strong {
+  font-size: 1.4rem;
 }
 
 .glow {

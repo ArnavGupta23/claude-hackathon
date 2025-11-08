@@ -53,18 +53,55 @@ const AuthFormCard = ({
 
       <form className="stack" onSubmit={onSubmit}>
         {mode === 'signup' && (
-          <label className="field">
-            <span>Full name</span>
-            <input
-              type="text"
-              placeholder="Ada Lovelace"
-              value={form.name}
-              onChange={handleChange('name')}
-              autoComplete="name"
-              disabled={busy}
-              required
-            />
-          </label>
+          <>
+            <label className="field">
+              <span>Full name</span>
+              <input
+                type="text"
+                placeholder="Ada Lovelace"
+                value={form.name}
+                onChange={handleChange('name')}
+                autoComplete="name"
+                disabled={busy}
+                required
+              />
+            </label>
+
+            <fieldset className="role-fieldset" aria-label="Select how you want to use the app">
+              <legend>How do you want to use Local Repair Matchmaker?</legend>
+              <div className="role-options">
+                <label className={`role-option ${form.role === 'seeker' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="seeker"
+                    checked={form.role === 'seeker'}
+                    onChange={(event) => onFieldChange('role', event.target.value)}
+                    disabled={busy}
+                  />
+                  <div>
+                    <strong>I need something fixed</strong>
+                    <p>Share broken items and get instant repair guidance.</p>
+                  </div>
+                </label>
+
+                <label className={`role-option ${form.role === 'fixer' ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="fixer"
+                    checked={form.role === 'fixer'}
+                    onChange={(event) => onFieldChange('role', event.target.value)}
+                    disabled={busy}
+                  />
+                  <div>
+                    <strong>I can repair things</strong>
+                    <p>Offer your skills and claim nearby repair requests.</p>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
+          </>
         )}
 
         <label className="field">
